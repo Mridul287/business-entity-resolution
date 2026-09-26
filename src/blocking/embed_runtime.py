@@ -92,6 +92,11 @@ STORAGE_DTYPE = np.float16
 
 MANIFEST_NAME = "manifest.json"
 
+# The shard filename prefix, owned here because this module writes the shards.
+# A reader that hard-coded "shard_" would silently find nothing the day the
+# prefix changed, which is the failure mode a named constant exists to prevent.
+SHARD_GLOB_PREFIX = "shard_"
+
 
 # ---------------------------------------------------------------------------
 # Seams
@@ -542,7 +547,7 @@ def iter_plan_shards(plan_dir: Path) -> list[tuple[int, pd.DataFrame]]:
     """
     plan_dir = Path(plan_dir)
     out = []
-    for path in sorted(plan_dir.glob("shard_*.parquet")):
+    for path in sorted(plan_dir.glob(f"{SHARD_GLOB_PREFIX}*.parquet")):
         out.append((int(path.stem.split("_")[1]), pd.read_parquet(path)))
     return out
 
@@ -790,7 +795,7 @@ def verify_shards(
     entity ids, not just the totals.
     """
     out_dir = Path(out_dir)
-    files = sorted(out_dir.glob("shard_*.parquet"))
+    files = sorted(out_dir.glob(f"{SHARD_GLOB_PREFIX}*.parquet"))
     ids: list[str] = []
     rows = 0
     want = run_fingerprint(identity) if identity is not None else None
