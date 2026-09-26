@@ -104,8 +104,8 @@ FILTER_BY_FLAG = ("test_source2.tsv", "test_source3.tsv", "train_source2.tsv", "
 # which is the whole recall problem here, since the anchor side is Latin
 # transliteration and the candidate side is often not.
 #
-# It is also a 24-layer, 1024-dim BERT-large, several times the cost per name
-# than the 12-layer/384-dim multilingual MiniLM. That is a deliberate trade:
+# It is also a 12-layer, 768-dim BERT-base, twice the cost per name of the
+# 12-layer/384-dim multilingual MiniLM. That is a deliberate trade:
 # the scope decision in this module is about *which* rows, and spending the
 # compute on the right rows with the better model beats the reverse. Budget the
 # GPU time accordingly -- at ~3.4M rows this is the dominant cost in Phase 3b,

@@ -588,7 +588,7 @@ def test_a_100k_shard_of_labse_vectors_is_about_195_mib() -> None:
     storage dtype changes, this moves and the shard count should be revisited.
     """
     mib = 100_000 * rt.VECTOR_DIM * np.dtype(rt.STORAGE_DTYPE).itemsize / 2**20
-    assert 150 < mib < 250
+    assert 130 < mib < 200
 
 
 # --------------------------------------------------------------------------
@@ -792,21 +792,134 @@ def test_a_corrupt_manifest_does_not_stop_a_resume(tmp_path) -> None:
 
 def test_the_documented_vector_sizes_are_the_ones_the_code_produces() -> None:
     """
-    The module docstring quotes 6.5 GiB fp16 / 13.0 GiB fp32 for the full run.
-    Those numbers were wrong by 2x for a while, so they are pinned to arithmetic
-    here rather than left as prose nobody recomputes.
+    The module docstring quotes 4.9 GiB fp16 / 9.7 GiB fp32 for the full run.
+    Those numbers were wrong by 2x for a while, and were then wrong by a
+    different reason for longer: the docstring said 1024 dims, which is
+    BERT-large's width, not LaBSE's. So the width is read from VECTOR_DIM here
+    rather than typed in, and a separate test pins VECTOR_DIM itself to the
+    model repo. A literal in this test would drift again.
     """
     planned_rows = 3_397_040        # measured by build_plan_shards on the real data
-    dims = 1024                    # LaBSE
+    dims = rt.VECTOR_DIM            # 768, from sentence-transformers/LaBSE config.json
 
     fp16 = planned_rows * dims * np.dtype(rt.STORAGE_DTYPE).itemsize / 2**30
     fp32 = planned_rows * dims * 4 / 2**30
-    assert round(fp16, 1) == 6.5
-    assert round(fp32, 1) == 13.0
+    assert round(fp16, 1) == 4.9
+    assert round(fp32, 1) == 9.7
     # fp16 is exactly half of fp32, and neither is small enough to hold in RAM
     # next to the encoder -- which is the whole reason for sharding.
     assert abs(fp32 - 2 * fp16) < 1e-9
-    assert fp16 > 6.0
+    assert fp16 > 4.0
+
+
+def test_vector_dim_matches_the_labse_model_card() -> None:
+    """
+    LaBSE is a BERT-base encoder. `config.json` in the model repo has
+    hidden_size=768 and num_hidden_layers=12; 1_Pooling/config.json has
+    word_embedding_dimension=768. BERT-large would be 1024/24, and this
+    constant was that value for the whole Phase 3 run.
+
+    This is a pin on a fact about a remote model, which is normally a bad thing
+    to assert. It is here because the constant is load-bearing for the memory
+    budget that decides whether the Colab run fits, and because the wrong value
+    sat here through a full phase unnoticed.
+    """
+    assert rt.VECTOR_DIM == 768
+
+
+# --------------------------------------------------------------------------
+# verify_shards measures the vector width instead of trusting a label
+# --------------------------------------------------------------------------
+def _write_wide_shard(out_dir: Path, n: int, dim: int) -> None:
+    """A shard whose vectors are `dim` wide, written the way embed_shard does."""
+    frame = pd.DataFrame(
+        {
+            "shard_id": 0,
+            "entity_id": [f"S1-{i}" for i in range(n)],
+            "business_name_clean": ["acme"] * n,
+            "embedding": list(
+                np.random.default_rng(0).random((n, dim)).astype(rt.STORAGE_DTYPE)
+            ),
+        }
+    )
+    frame.to_parquet(out_dir / "shard_00000.parquet")
+
+
+def test_verify_shards_reports_the_width_actually_on_disk(tmp_path: Path) -> None:
+    """
+    The report is a measurement, so it is asserted on a directory whose width
+    is chosen to disagree with the constant. That is the whole point: a report
+    that echoed VECTOR_DIM back would pass this test while telling us nothing.
+    """
+    _write_wide_shard(tmp_path, n=8, dim=1024)
+    report = rt.verify_shards(tmp_path)
+    assert report["vector_dims"] == [1024]
+    assert report["vector_dim_shards"] == {"1024": 1}
+
+
+def test_verify_shards_fails_a_directory_whose_vectors_are_the_wrong_width(
+    tmp_path: Path,
+) -> None:
+    """
+    The gap this closes: for the whole Phase 3 run `verify_shards` read
+    `columns=["entity_id"]`, so a wrong-width directory reported ok=True. A
+    1024-wide shard under a 768-wide expectation must now fail, and must say
+    which width it found.
+    """
+    _write_wide_shard(tmp_path, n=8, dim=1024)
+    report = rt.verify_shards(tmp_path, expected_vector_dim=rt.VECTOR_DIM)
+    assert report["ok"] is False
+    assert report["vector_dim_ok"] is False
+    assert report["expected_vector_dim"] == 768
+    problem = report["vector_dim_problem_shards"]
+    assert problem[0]["width"] == 1024
+    assert problem[0]["shards"] == ["shard_00000.parquet"]
+
+
+def test_verify_shards_passes_when_the_width_agrees(tmp_path: Path) -> None:
+    """The negative control: the check must not fail everything."""
+    _write_wide_shard(tmp_path, n=8, dim=rt.VECTOR_DIM)
+    report = rt.verify_shards(tmp_path, expected_vector_dim=rt.VECTOR_DIM)
+    assert report["vector_dims"] == [768]
+    assert report["ok"] is True
+
+
+def test_verify_shards_flags_a_directory_with_mixed_widths(tmp_path: Path) -> None:
+    """
+    A half-replaced directory is the realistic version of this bug: one shard
+    from a different model among 35 correct ones. Reporting a single width list
+    would hide it, so the report groups by width.
+    """
+    _write_wide_shard(tmp_path, n=8, dim=rt.VECTOR_DIM)
+    other = tmp_path / "shard_00001.parquet"
+    frame = pd.DataFrame(
+        {
+            "shard_id": 1,
+            "entity_id": [f"S1-{i}" for i in range(8, 16)],
+            "business_name_clean": ["acme"] * 8,
+            "embedding": list(
+                np.random.default_rng(1).random((8, 1024)).astype(rt.STORAGE_DTYPE)
+            ),
+        }
+    )
+    frame.to_parquet(other)
+    report = rt.verify_shards(tmp_path, expected_vector_dim=rt.VECTOR_DIM)
+    assert report["vector_dims"] == [768, 1024]
+    assert report["vector_dim_shards"] == {"768": 1, "1024": 1}
+    assert report["ok"] is False
+
+
+def test_width_check_is_off_by_default_so_existing_callers_are_unchanged(
+    tmp_path: Path,
+) -> None:
+    """
+    `expected_vector_dim` defaults to None: a wrong-width directory still
+    reports `ok=True` unless a caller asks for the check. The Colab path asks
+    for it. Making it unconditional would have retroactively invalidated the
+    existing shard directory, which may well be fine.
+    """
+    _write_wide_shard(tmp_path, n=8, dim=1024)
+    assert rt.verify_shards(tmp_path)["ok"] is True
 
 
 # --------------------------------------------------------------------------

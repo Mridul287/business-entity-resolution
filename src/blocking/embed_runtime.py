@@ -28,8 +28,8 @@ says so *before* any GPU time is spent, and names the remedy.
 WHY SHARDED, AND WHY THE VECTORS NEVER ALL EXIST AT ONCE
 --------------------------------------------------------
 
-LaBSE emits 1024 dims. At the measured 3,397,040 planned rows that is 6.5 GiB
-as float16 and 13.0 GiB as float32 (3,397,040 x 1024 x 2 and x 4 bytes) --
+LaBSE emits 768 dims. At the measured 3,397,040 planned rows that is 4.9 GiB
+as float16 and 9.7 GiB as float32 (3,397,040 x 768 x 2 and x 4 bytes) --
 neither fits in a Colab VM alongside the frames and the encoder. So vectors are
 written to disk one shard at a time and never accumulated. The full-run total
 lives in a manifest, not in memory.
@@ -74,6 +74,7 @@ from typing import Callable, Iterable, Sequence
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet
 
 from .embed_names import (
     DEFAULT_MODEL,
@@ -82,8 +83,16 @@ from .embed_names import (
     select_rows_to_embed,
 )
 
-# LaBSE is a BERT-large bi-encoder: 1024 dims, 1024 max seq length.
-VECTOR_DIM = 1024
+# LaBSE is a BERT-*base* bi-encoder: 768 dims, 12 layers, 512 max positions.
+# These three numbers were wrong here for the whole Phase 3 run -- 1024 dims and
+# 24 layers, which are BERT-large's, carried over from a comment comparing
+# against a rejected encoder. Verified against the model repo: config.json has
+# hidden_size=768 / num_hidden_layers=12 / intermediate_size=3072, and
+# 1_Pooling/config.json has word_embedding_dimension=768. Nothing in this module
+# ever reshapes a vector to this width, so no shard was written wrong by it --
+# but verify_shards now checks the width for real (see VECTOR_COLUMN below),
+# because it did not, and that gap is how a wrong model could have gone unnoticed.
+VECTOR_DIM = 768
 
 # fp16 halves both the shard files and the eventual FAISS index. On a cosine
 # ranking the loss is ~1e-3 relative, well under the recall differences this
@@ -96,6 +105,11 @@ MANIFEST_NAME = "manifest.json"
 # A reader that hard-coded "shard_" would silently find nothing the day the
 # prefix changed, which is the failure mode a named constant exists to prevent.
 SHARD_GLOB_PREFIX = "shard_"
+
+# The vector column in a shard. Named so that `verify_shards` can measure the
+# width on disk instead of taking it on trust from a manifest label or a
+# docstring -- see `verify_shards` for why that distinction mattered.
+VECTOR_COLUMN = "embedding"
 
 
 # ---------------------------------------------------------------------------
@@ -779,31 +793,65 @@ def run_shards(
     return outcome
 
 
+def _first_vector_width(path: Path) -> int | None:
+    """
+    The element count of the first vector in a shard, or None if unreadable.
+
+    Reads one row via the parquet row iterator rather than `read_parquet`, which
+    would pull the whole column. Measured at 0.04s against a 126 MiB shard, so
+    this is affordable on every shard and not just a spot check.
+    """
+    try:
+        handle = pyarrow.parquet.ParquetFile(path)
+        batch = next(
+            handle.iter_batches(batch_size=1, columns=[VECTOR_COLUMN]), None
+        )
+        if batch is None or batch.num_rows == 0:
+            return None
+        value = batch.column(0)[0].as_py()
+        return None if value is None else len(value)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def verify_shards(
     out_dir: Path,
     *,
     expected_total_rows: int | None = None,
     expected_ids: set[str] | None = None,
     identity: dict | None = None,
+    expected_vector_dim: int | None = None,
 ) -> dict:
     """
     Check the run on disk against what was intended.
 
-    Three things can go wrong across sessions and none of them show up in a row
-    count: a shard written twice under different ids, a missing shard, or a
-    shard from a *different* run left in the directory. So this checks the
-    entity ids, not just the totals.
+    Four things can go wrong across sessions and not one of them shows up in a
+    row count: a shard written twice under different ids, a missing shard, a
+    shard from a *different* run left in the directory, and vectors of the wrong
+    width. So this checks the entity ids and the vector width, not just totals.
+
+    The width check exists because for the whole Phase 3 run this function read
+    `columns=["entity_id"]` and never opened the vector column, while
+    `VECTOR_DIM` was set to 1024 -- BERT-large's width, not LaBSE's 768. A
+    verification that cannot see width cannot fail on width, so `ok: True` from
+    that era says nothing about which encoder actually ran. Pass
+    `expected_vector_dim` to make it load-bearing; it defaults to off so that
+    existing callers keep their current behaviour.
     """
     out_dir = Path(out_dir)
     files = sorted(out_dir.glob(f"{SHARD_GLOB_PREFIX}*.parquet"))
     ids: list[str] = []
     rows = 0
+    widths: dict[str, list[str]] = {}
     want = run_fingerprint(identity) if identity is not None else None
     stale_shards: list[str] = []
     for path in files:
         frame = pd.read_parquet(path, columns=["entity_id"])
         rows += len(frame)
         ids.extend(frame["entity_id"].astype(str).tolist())
+        width = _first_vector_width(path)
+        if width is not None:
+            widths.setdefault(str(width), []).append(path.name)
         if want is not None:
             meta = path.with_name(path.stem + SHARD_META_SUFFIX)
             try:
@@ -819,6 +867,10 @@ def verify_shards(
         "rows": rows,
         "unique_entity_ids": len(set(ids)),
         "duplicate_entity_ids": duplicates,
+        # Observed on disk, not declared. A manifest `model` field is a label
+        # someone typed; this is a measurement of the bytes.
+        "vector_dims": sorted(int(w) for w in widths),
+        "vector_dim_shards": {w: len(v) for w, v in sorted(widths.items())},
     }
     if want is not None:
         report["fingerprint"] = want
@@ -832,12 +884,25 @@ def verify_shards(
         extra = set(ids) - expected_ids
         report["missing_entity_ids"] = len(missing)
         report["unexpected_entity_ids"] = len(extra)
+    if expected_vector_dim is not None:
+        report["expected_vector_dim"] = expected_vector_dim
+        observed = set(int(w) for w in widths)
+        report["vector_dim_ok"] = observed == {expected_vector_dim}
+        if not report["vector_dim_ok"]:
+            # Name the offenders. "Something is wrong" is not actionable at 3am
+            # with 36 shards and a session budget.
+            report["vector_dim_problem_shards"] = [
+                {"width": int(w), "shards": v[:10], "count": len(v)}
+                for w, v in sorted(widths.items())
+                if int(w) != expected_vector_dim
+            ]
     report["ok"] = (
         duplicates == 0
         and not stale_shards
         and (expected_total_rows is None or rows == expected_total_rows)
         and (expected_ids is None or report.get("missing_entity_ids", 0) == 0)
         and (expected_ids is None or report.get("unexpected_entity_ids", 0) == 0)
+        and (expected_vector_dim is None or report.get("vector_dim_ok", True))
     )
     return report
 

@@ -18,9 +18,13 @@ Colab search will run against. A shard is:
     shard_00000.parquet  ->  shard_id           int
                              entity_id         str    "S2-166376419"
                              business_name_clean str
-                             embedding          list<float16>[1024]
+                             embedding          list<float16>[768]
 
-Confirmed against `embed_runtime.embed_shard` and `VECTOR_DIM`, not assumed.
+Read against `embed_runtime.embed_shard`, and the width cross-checked against the
+LaBSE repo itself (`config.json: hidden_size=768`). Nothing in this module trusts
+`embed_runtime.VECTOR_DIM` to build the index: `build_index` takes the width from
+`embeddings.shape[1]`, so a shard written by a different model fails loudly in
+`verify_shards` rather than being silently reshaped here.
 Three consequences are load-bearing and each one is a bug if ignored:
 
   * `embedding` is a *list column* of per-row arrays, not a flat column, so
@@ -77,7 +81,7 @@ TEXT_COLUMN = "business_name_clean"
 VECTOR_COLUMN = "embedding"
 
 # The columns a row filter is allowed to see. Deliberately excludes
-# `VECTOR_COLUMN`: passing a row containing a 1024-float array through
+# `VECTOR_COLUMN`: passing a row containing a 768-float array through
 # `DataFrame.apply(axis=1)` is what turns a linear scan into a quadratic one, and
 # no plausible filter needs the vector to decide whether to keep the row.
 FILTER_COLUMNS = (ID_COLUMN, TEXT_COLUMN)
@@ -220,14 +224,28 @@ def _verify_or_raise(manifest_path: Path, paths: Sequence[Path]) -> None:
         expected_total_rows=manifest.get("rows"),
         expected_ids=None,
         identity=identity,
+        # The one check the Phase 3 verification could not make. A directory
+        # left by a different encoder has a different fingerprint *only if*
+        # someone recorded the encoder honestly in `identity`; the width is
+        # measured from the vectors themselves, so it catches the case where the
+        # label says LaBSE and the bytes disagree.
+        expected_vector_dim=rt.VECTOR_DIM,
     )
     if not report.get("ok", False):
         stale = report.get("stale_shard_names") or []
+        widths = report.get("vector_dims")
+        detail = (
+            f"vector width on disk {widths}, expected {rt.VECTOR_DIM}. If this is a "
+            f"genuine mismatch, these vectors were not written by the model the "
+            f"manifest names and no recall number computed from them is meaningful."
+            if report.get("vector_dim_ok") is False
+            else ""
+        )
         raise ValueError(
             f"{manifest_path.parent} failed embed_runtime.verify_shards: "
-            f"stale shards {stale}, report {report}. These vectors are not all from "
-            f"the run this manifest describes, and indexing them together would "
-            f"produce a recall number nobody could trace."
+            f"stale shards {stale}, report {report}. {detail} These vectors are "
+            f"not all from the run this manifest describes, and indexing them "
+            f"together would produce a recall number nobody could trace."
         )
     if len(stale := list(paths)) == 0:  # pragma: no cover - defensive
         raise ValueError(f"no shards to load in {manifest_path.parent}")

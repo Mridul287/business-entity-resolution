@@ -437,7 +437,7 @@ def test_filter_is_applied_before_stacking(two_shard_dir: Path) -> None:
 
 def test_filter_receives_a_row_without_the_vector(two_shard_dir: Path) -> None:
     """
-    The contract that keeps the filter linear-time. A row carrying a 1024-float
+    The contract that keeps the filter linear-time. A row carrying a 768-float
     array through `DataFrame.apply(axis=1)` is the difference between a scan and
     a stall over millions of rows.
     """
@@ -570,3 +570,112 @@ def test_search_asks_for_no_more_than_the_index_holds() -> None:
     out = search(["Q-C"], np.stack([VECTORS["C"]]), ["CAND-A", "CAND-B"], index, top_k=20)
     assert len(out) == 2
     assert out["candidate_entity_id"].notna().all()
+
+
+# --------------------------------------------------------------------------
+# verify=True: the path the Colab run actually takes
+# --------------------------------------------------------------------------
+# Every other test in this file passes verify=False, which left the entire
+# verification path untested -- including the refusal that `load_embedding_shards`
+# is documented to make. These fixtures use vectors of the *real* width,
+# rt.VECTOR_DIM, because that is the width the check compares against; the
+# hand-placed DIM=8 vectors are deliberately the wrong width and the loader
+# should say so.
+LABSE_IDENTITY = {"model": "LaBSE", "strict": False, "storage_dtype": str(rt.STORAGE_DTYPE)}
+
+
+def _write_meta(directory: Path, shard_id: int, fingerprint: str, rows: int) -> None:
+    """The provenance sidecar `embed_shard` writes next to each shard."""
+    path = rt.shard_meta_path(directory, shard_id)
+    path.write_text(
+        json.dumps({"fingerprint": fingerprint, "shard_id": shard_id, "rows": rows}),
+        encoding="utf-8",
+    )
+
+
+def _labse_dir(tmp_path: Path, dim: int, *, fingerprint: str | None = None) -> Path:
+    """A shard directory of `dim`-wide vectors plus a matching manifest+sidecars."""
+    directory = tmp_path / "out"
+    directory.mkdir()
+    rng = np.random.default_rng(7)
+    vectors = [
+        rng.random(dim).astype(np.float32) for _ in range(3)
+    ]
+    vectors = [v / np.linalg.norm(v) for v in vectors]
+    _write_shard(
+        directory / "shard_00000.parquet",
+        ["S1-1", "S2-1", "S3-1"],
+        ["Alpha", "Beta", "Gamma"],
+        vectors,
+    )
+    identity = dict(LABSE_IDENTITY)
+    _write_meta(
+        directory,
+        0,
+        fingerprint if fingerprint is not None else rt.run_fingerprint(identity),
+        rows=3,
+    )
+    _write_manifest(directory, identity=identity, rows=3)
+    return directory
+
+
+def test_loader_accepts_a_directory_whose_vectors_are_the_right_width(
+    tmp_path: Path,
+) -> None:
+    """
+    The positive control for the width check. Without it, a check that always
+    fails would pass every other test in this section.
+    """
+    directory = _labse_dir(tmp_path, rt.VECTOR_DIM)
+    ids, vectors = load_embedding_shards(directory / rt.MANIFEST_NAME, verify=True)
+    assert list(ids) == ["S1-1", "S2-1", "S3-1"]
+    assert vectors.shape == (3, rt.VECTOR_DIM)
+
+
+def test_loader_refuses_vectors_that_are_not_the_width_labse_emits(tmp_path: Path) -> None:
+    """
+    The case this whole exercise is about. A directory whose vectors are 1024
+    wide, under a manifest that says LaBSE, must be refused with a message that
+    names both widths -- because "failed verification" at 3am with 36 shards
+    does not tell anyone which encoder actually ran.
+
+    1024 is not hypothetical: it is the width `VECTOR_DIM` claimed for the whole
+    Phase 3 run, so a directory in that state is exactly what the old constant
+    would have described as correct.
+    """
+    directory = _labse_dir(tmp_path, 1024)
+    with pytest.raises(ValueError) as excinfo:
+        load_embedding_shards(directory / rt.MANIFEST_NAME, verify=True)
+    message = str(excinfo.value)
+    assert "[1024]" in message
+    assert str(rt.VECTOR_DIM) in message
+    assert "not the width" in message or "not written by the model" in message
+
+
+def test_loader_refuses_a_shard_from_a_different_run(tmp_path: Path) -> None:
+    """
+    The pre-existing stale-shard refusal, which was also untested. Same width,
+    same row count, different fingerprint -- the exact mixture that
+    `run_fingerprint` exists to catch, and that a row count cannot.
+    """
+    directory = _labse_dir(tmp_path, rt.VECTOR_DIM, fingerprint="deadbeefdeadbeef")
+    with pytest.raises(ValueError) as excinfo:
+        load_embedding_shards(directory / rt.MANIFEST_NAME, verify=True)
+    assert "verify_shards" in str(excinfo.value)
+
+
+def test_loader_skips_verification_when_the_manifest_has_no_identity(
+    tmp_path: Path,
+) -> None:
+    """
+    `_verify_or_raise` returns early when the manifest carries no `identity`,
+    because there is no run to compare against. A directory like that is loaded
+    rather than rejected: refusing would break every hand-built test directory,
+    and the width check has nothing to check against.
+    """
+    directory = _labse_dir(tmp_path, rt.VECTOR_DIM)
+    manifest = json.loads((directory / rt.MANIFEST_NAME).read_text(encoding="utf-8"))
+    manifest.pop("identity")
+    (directory / rt.MANIFEST_NAME).write_text(json.dumps(manifest), encoding="utf-8")
+    ids, vectors = load_embedding_shards(directory / rt.MANIFEST_NAME, verify=True)
+    assert vectors.shape == (3, rt.VECTOR_DIM)
