@@ -1,0 +1,10 @@
+# Pin exact versions before final submission
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.0
+lightgbm==4.3.0
+rapidfuzz==3.9.4       # fast Levenshtein / Jaro-Winkler
+sentence-transformers==3.0.1   # optional: MIT/Apache embedding model for blocking+features
+datasketch==1.6.4      # MinHash/LSH for blocking
+tqdm==4.66.4
+pyyaml==6.0.1

@@ -1,0 +1,25 @@
+# data (too large / provided separately, not committed)
+dataset/train/*.tsv
+dataset/test/*.tsv
+!dataset/train/.gitkeep
+!dataset/test/.gitkeep
+
+# outputs (regenerated, not committed — except final submission run)
+output/*.tsv
+!output/.gitkeep
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# notebooks checkpoints
+.ipynb_checkpoints/
+
+# os/editor
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,637 @@
+{
+  "schema_version": 1,
+  "description": "Indian state / Union Territory names in nine native scripts, mapped to canonical English.",
+  "methodology_note": "This is PUBLIC REFERENCE DATA (the official English names of India's 28 states and 8 Union Territories, together with their usual spellings in Indian scripts). It is gazetteer/encyclopaedic knowledge, NOT a lookup derived from, fitted to, or keyed on any business record in this dataset. Nothing here was learned from the source TSVs, no business identifier appears in it, and no entry encodes a match between two entities. It exists so that the same administrative unit written in two scripts compares equal after preprocessing, in the same way that a country name or a currency code would.",
+  "purpose_and_limits": "canonicalize_state() replaces a state/UT token with its canonical English name. It is deliberately a state/UT-level gazetteer and nothing more: it does NOT translate names, districts, cities or streets, and it does not attempt transliteration. Anything not in this file passes through unchanged.",
+  "canonical_form": "The English name is the current official name as used by the Government of India. Older and alternate English spellings (Orissa, Keralam, Pondicherry) are listed as aliases and are rewritten to the canonical form, because the point of the table is to make two spellings of the same unit compare equal. A token that is already the canonical English name is returned unchanged (it is a fixed point, not a no-op by special-casing).",
+  "compounding_note": "For Union Territories with a multi-part official name (Dadra and Nagar Haveli and Daman and Diu, Jammu and Kashmir, Andaman and Nicobar Islands), only whole-unit spellings and the ISO 3166-2 suffix codes are listed. Bare sub-parts (Diu, Daman, Jammu, Andaman, Nicobar) are deliberately absent: they are also ordinary city / district / island names, so matching them as a unit would corrupt real address text ('South Andaman' is not in Maharashtra).",
+  "provenance": {
+    "unit_names": "Official English names and ISO 3166-2:IN codes, which are public reference data.",
+    "native_script_forms": "Hand-authored. For each unit, the form is either the established native-script spelling (see script_coverage.native) or a transliteration of the English name into that script. Transliterations are included because the source data does contain state names written in the script of the language the record was typed in, not only the script of the state itself - e.g. a Devanagari 'राजस्थान' on a row whose other address text is English, and a Telugu 'ఆంధ్రప్రదేశ్' as a single unspaced compound.",
+    "attestation": "attested_in_sample lists the units whose native-script spelling was actually observed in dataset/ (3,000,000-row stratified sample, 500k rows from each of the six source TSVs, scanned for maximal runs of each script's codepoint range inside business_address). Every other entry is authored and is NOT attested by this dataset; it is retained for coverage, not because a row in this dataset was seen to need it. A test asserts that every attested spelling maps to the right canonical English name."
+  },
+  "script_coverage": {
+    "en": "Canonical English name, common alternate English spellings, and the ISO 3166-2:IN suffix code.",
+    "Devanagari": {
+      "native": true,
+      "note": "Devanagari is the administrative script for Hindi and Marathi and is used nationwide for gazetteer names, so a native form exists for all 36 units. This is also by far the highest-volume script in the data."
+    },
+    "Bengali": { "native": "West Bengal, Assam, Tripura", "note": "Transliteration elsewhere." },
+    "Gurmukhi": { "native": "Punjab, Chandigarh", "note": "Transliteration elsewhere." },
+    "Gujarati": { "native": "Gujarat, Goa, Dadra and Nagar Haveli and Daman and Diu", "note": "Transliteration elsewhere." },
+    "Oriya": { "native": "Odisha", "note": "Transliteration elsewhere." },
+    "Tamil": { "native": "Tamil Nadu, Puducherry, Andaman and Nicobar Islands", "note": "Transliteration elsewhere." },
+    "Telugu": { "native": "Andhra Pradesh, Telangana", "note": "Transliteration elsewhere. Andhra Pradesh appears both as two words and as one unspaced compound in the data; both are listed." },
+    "Kannada": { "native": "Karnataka", "note": "Transliteration elsewhere." },
+    "Malayalam": { "native": "Kerala, Lakshadweep, Puducherry", "note": "Transliteration elsewhere." }
+  },
+  "attested_in_sample": [
+    "Andhra Pradesh",
+    "Bihar",
+    "Delhi",
+    "Gujarat",
+    "Haryana",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Tamil Nadu",
+    "Telangana",
+    "Uttar Pradesh",
+    "West Bengal"
+  ],
+  "attested_sample_note": "16 of the 36 units. Only these 13 distinct native-script state strings occur in the scanned 3M-row sample: महाराष्ट्र, दिल्ली, उत्तर प्रदेश, हरियाणा, राजस्थान, बिहार, मध्य प्रदेश (Devanagari); ગુજરાત (Gujarati); ਪੰਜਾਬ (Gurmukhi); తెలంగాణ, ఆంధ్రప్రదేశ్ (Telugu); தமிழ்நாடு (Tamil); ಕರ್ನಾಟಕ (Kannada); കേരളം (Malayalam); পশ্চিমবঙ্গ (Bengali); ଓଡ଼ିଶା (Oriya).",
+  "states": [
+    {
+      "canonical": "Andhra Pradesh",
+      "kind": "state",
+      "names": {
+        "en": ["Andhra Pradesh", "AP", "Andhra"],
+        "Devanagari": ["आंध्र प्रदेश", "आन्ध्र प्रदेश", "आन्ध्रप्रदेश"],
+        "Bengali": ["অন্ধ্রপ্রদেশ", "অন্ধ্র প্রদেশ"],
+        "Gurmukhi": ["ਐਂਧਰਾ ਪ੍ਰਦੇਸ਼", "ਆਂਧਰਾ ਪ੍ਰਦੇਸ਼"],
+        "Gujarati": ["આંધ્ર પ્રદેશ", "આંધ્રપ્રદેશ"],
+        "Oriya": ["ଅନ୍ଧ୍ରପ୍ରଦେଶ", "ଅନ୍ଧ୍ର ପ୍ରଦେଶ"],
+        "Tamil": ["ஆந்திரப் பிரதேசம்", "ஆந்திர பிரதேசம்"],
+        "Telugu": ["ఆంధ్ర ప్రదేశ్", "ఆంధ్రప్రదేశ్", "ఆంధ్రప్రదేశ"],
+        "Kannada": ["ಆಂಧ್ರಪ್ರದೇಶ", "ಆಂಧ್ರ ಪ್ರದೇಶ"],
+        "Malayalam": ["ആന്ധ്രപ്രദേശം", "ആന്ധ്ര പ്രദേശം"]
+      }
+    },
+    {
+      "canonical": "Arunachal Pradesh",
+      "kind": "state",
+      "names": {
+        "en": ["Arunachal Pradesh", "AR"],
+        "Devanagari": ["अरुणाचल प्रदेश"],
+        "Bengali": ["অরুণাচল প্রদেশ"],
+        "Gurmukhi": ["ਅਰੂਣਾਚਲ ਪ੍ਰਦੇਸ਼"],
+        "Gujarati": ["અરુણાચલ પ્રદેશ"],
+        "Oriya": ["ଅରୁଣାଚଳ ପ୍ରଦେଶ"],
+        "Tamil": ["அருணாச்சலப் பிரதேசம்"],
+        "Telugu": ["అరుణాచల్ ప్రదేశ్"],
+        "Kannada": ["ಅರುಣಾಚಲ ಪ್ರದೇಶ"],
+        "Malayalam": ["അരുണാചൽ പ്രദേശം"]
+      }
+    },
+    {
+      "canonical": "Assam",
+      "kind": "state",
+      "names": {
+        "en": ["Assam", "AS"],
+        "Devanagari": ["असम", "आसाम"],
+        "Bengali": ["অসম", "আসাম"],
+        "Gurmukhi": ["ਅਸਾਮ"],
+        "Gujarati": ["અસમ"],
+        "Oriya": ["ଅସମ"],
+        "Tamil": ["அசாம்"],
+        "Telugu": ["అసం"],
+        "Kannada": ["ಅಸಾಂ"],
+        "Malayalam": ["അസാം"]
+      }
+    },
+    {
+      "canonical": "Bihar",
+      "kind": "state",
+      "names": {
+        "en": ["Bihar", "BR"],
+        "Devanagari": ["बिहार"],
+        "Bengali": ["বিহার"],
+        "Gurmukhi": ["ਬਿਹਾਰ"],
+        "Gujarati": ["બિહાર"],
+        "Oriya": ["ବିହାର"],
+        "Tamil": ["பீகார்"],
+        "Telugu": ["బిహార్"],
+        "Kannada": ["ಬಿಹಾರ"],
+        "Malayalam": ["ബിഹാർ"]
+      }
+    },
+    {
+      "canonical": "Chhattisgarh",
+      "kind": "state",
+      "names": {
+        "en": ["Chhattisgarh", "CG", "Chhattisgarh State"],
+        "Devanagari": ["छत्तीसगढ़"],
+        "Bengali": ["ছত্তিসগড়"],
+        "Gurmukhi": ["ਛੱਤੀਸਗੜ੍ਹ"],
+        "Gujarati": ["છત્તીસગઢ़"],
+        "Oriya": ["ଛତ୍ତିସଗଢ଼"],
+        "Tamil": ["சத்தீஸ்கர்"],
+        "Telugu": ["ఛత్తీసగడ్"],
+        "Kannada": ["ಛತ್ತೀಸಗಢ್"],
+        "Malayalam": ["ഛത്തീസ്ഗഢ്"]
+      }
+    },
+    {
+      "canonical": "Goa",
+      "kind": "state",
+      "names": {
+        "en": ["Goa"],
+        "Devanagari": ["गोवा"],
+        "Bengali": ["গোয়া", "গোআ"],
+        "Gurmukhi": ["ਗੋਆ"],
+        "Gujarati": ["ગોવા"],
+        "Oriya": ["ଗୋଆ"],
+        "Tamil": ["கோவா"],
+        "Telugu": ["గోవా"],
+        "Kannada": ["ಗೋವ"],
+        "Malayalam": ["ഗോവ"]
+      }
+    },
+    {
+      "canonical": "Gujarat",
+      "kind": "state",
+      "names": {
+        "en": ["Gujarat", "GJ"],
+        "Devanagari": ["गुजरात"],
+        "Bengali": ["গুজরাট"],
+        "Gurmukhi": ["ਗੁਜਰਾਤ"],
+        "Gujarati": ["ગુજરાત"],
+        "Oriya": ["ଗୁଜରାତ"],
+        "Tamil": ["குஜராத்"],
+        "Telugu": ["గుజరాత్"],
+        "Kannada": ["ಗುಜರಾತ್"],
+        "Malayalam": ["ഗുജറാത്സ്"]
+      }
+    },
+    {
+      "canonical": "Haryana",
+      "kind": "state",
+      "names": {
+        "en": ["Haryana", "HR"],
+        "Devanagari": ["हरियाणा"],
+        "Bengali": ["হরিয়ানা"],
+        "Gurmukhi": ["ਹਰਿਆਣਾ"],
+        "Gujarati": ["હરિયાણા"],
+        "Oriya": ["ହରିୟାଣ"],
+        "Tamil": ["ஹரியானா"],
+        "Telugu": ["హరియాణా"],
+        "Kannada": ["ಹರಿಯಾಣ"],
+        "Malayalam": ["ഹരിയാണ"]
+      }
+    },
+    {
+      "canonical": "Himachal Pradesh",
+      "kind": "state",
+      "names": {
+        "en": ["Himachal Pradesh", "HP", "Himachal"],
+        "Devanagari": ["हिमाचल प्रदेश", "हिमाचल"],
+        "Bengali": ["হিমাচল প্রদেশ"],
+        "Gurmukhi": ["ਹਿਮਾਚਲ ਪ੍ਰਦੇਸ਼"],
+        "Gujarati": ["હિમાચલ પ્રદેશ"],
+        "Oriya": ["ହିମାଚଳ ପ୍ରଦେଶ"],
+        "Tamil": ["ஹிமாசலப் பிரதேசம்"],
+        "Telugu": ["హిమాచల్ ప్రదేశ్"],
+        "Kannada": ["ಹಿಮಾಚಲ ಪ್ರದೇಶ"],
+        "Malayalam": ["ഹിമാചൽ പ്രദേശം"]
+      }
+    },
+    {
+      "canonical": "Jharkhand",
+      "kind": "state",
+      "names": {
+        "en": ["Jharkhand", "JH"],
+        "Devanagari": ["झारखंड", "झारखण्ड"],
+        "Bengali": ["ঝাড়খণ্ড"],
+        "Gurmukhi": ["ਝਾਰਖੰਡ"],
+        "Gujarati": ["ઝારખંડ"],
+        "Oriya": ["ଝାରଖଣ୍ଡ"],
+        "Tamil": ["ஜார்கண்ட்"],
+        "Telugu": ["ఝార్ఖండ్"],
+        "Kannada": ["ಝಾರಖಂಡ್"],
+        "Malayalam": ["ഝാർക്കണ്ഡ്"]
+      }
+    },
+    {
+      "canonical": "Karnataka",
+      "kind": "state",
+      "names": {
+        "en": ["Karnataka", "KA", "Karnataka State"],
+        "Devanagari": ["कर्नाटक", "कर्णाटक"],
+        "Bengali": ["কর্ণাটক"],
+        "Gurmukhi": ["ਕਰਨਾਟਕ"],
+        "Gujarati": ["કર્નાટક"],
+        "Oriya": ["କର୍ନାଟକ"],
+        "Tamil": ["கர்நாடகா"],
+        "Telugu": ["కర్ణాటక్"],
+        "Kannada": ["ಕರ್ನಾಟಕ"],
+        "Malayalam": ["കർണാടക"]
+      }
+    },
+    {
+      "canonical": "Kerala",
+      "kind": "state",
+      "names": {
+        "en": ["Kerala", "KL", "Keralam"],
+        "Devanagari": ["केरल"],
+        "Bengali": ["কেরাল"],
+        "Gurmukhi": ["ਕੇਰਲ"],
+        "Gujarati": ["કેરળ"],
+        "Oriya": ["କେରଳ"],
+        "Tamil": ["கேரளா"],
+        "Telugu": ["కేరళ"],
+        "Kannada": ["ಕೇರಳ"],
+        "Malayalam": ["കേരളം", "കേരള"]
+      }
+    },
+    {
+      "canonical": "Madhya Pradesh",
+      "kind": "state",
+      "names": {
+        "en": ["Madhya Pradesh", "MP", "Madhyapradesh"],
+        "Devanagari": ["मध्य प्रदेश", "मध्यप्रदेश"],
+        "Bengali": ["মধ্য প্রদেশ"],
+        "Gurmukhi": ["ਮੱਧ ਪ੍ਰਦੇਸ਼"],
+        "Gujarati": ["મધ્ય પ્રદેશ"],
+        "Oriya": ["ମଧ୍ୟ ପ୍ରଦେଶ"],
+        "Tamil": ["மத்தியப் பிரதேசம்"],
+        "Telugu": ["మధ్య ప్రదేశ్"],
+        "Kannada": ["ಮಧ್ಯ ಪ್ರದೇಶ"],
+        "Malayalam": ["മധ്യ പ്രദേശം"]
+      }
+    },
+    {
+      "canonical": "Maharashtra",
+      "kind": "state",
+      "names": {
+        "en": ["Maharashtra", "MH", "Maharashtra State"],
+        "Devanagari": ["महाराष्ट्र"],
+        "Bengali": ["মহারাষ্ট্র"],
+        "Gurmukhi": ["ਮਹਾਰਾਸ਼ਟਰ"],
+        "Gujarati": ["મહારાષ્ટ્ર"],
+        "Oriya": ["ମହାରାଷ୍ଟ୍ର"],
+        "Tamil": ["மகாராஷ்டிரா"],
+        "Telugu": ["మహారాష్ట్రం"],
+        "Kannada": ["ಮಹಾರಾಷ್ಟ್ರ"],
+        "Malayalam": ["മഹാരാഷ്ട്ര"]
+      }
+    },
+    {
+      "canonical": "Manipur",
+      "kind": "state",
+      "names": {
+        "en": ["Manipur", "MN"],
+        "Devanagari": ["मणिपुर"],
+        "Bengali": ["মণিপুর"],
+        "Gurmukhi": ["ਮਣੀਪੁਰ"],
+        "Gujarati": ["મણિપુર"],
+        "Oriya": ["ମଣିପୁର"],
+        "Tamil": ["மணிப்பூர்"],
+        "Telugu": ["మణిపూర్"],
+        "Kannada": ["ಮಣಿಪುರ"],
+        "Malayalam": ["മണിപ്പൂർ"]
+      }
+    },
+    {
+      "canonical": "Meghalaya",
+      "kind": "state",
+      "names": {
+        "en": ["Meghalaya", "ML"],
+        "Devanagari": ["मेघालय"],
+        "Bengali": ["মেঘালয়"],
+        "Gurmukhi": ["ਮੇਘਾਲਿਆ"],
+        "Gujarati": ["મેઘાલય"],
+        "Oriya": ["ମେଘାଲୟ"],
+        "Tamil": ["மேகாலயா"],
+        "Telugu": ["మేఘాలయం"],
+        "Kannada": ["ಮೇಘಾಲಯ"],
+        "Malayalam": ["മേഘാലയം"]
+      }
+    },
+    {
+      "canonical": "Mizoram",
+      "kind": "state",
+      "names": {
+        "en": ["Mizoram", "MZ"],
+        "Devanagari": ["मिज़ोरम", "मिजोरम"],
+        "Bengali": ["মিজোরাম"],
+        "Gurmukhi": ["ਮਿਜ਼ੋਰਮ"],
+        "Gujarati": ["મિઝોરમ"],
+        "Oriya": ["ମିଜୋରମ"],
+        "Tamil": ["மிசோரம்"],
+        "Telugu": ["మిజోరం"],
+        "Kannada": ["ಮಿಜೋರಂ"],
+        "Malayalam": ["മിസോറം"]
+      }
+    },
+    {
+      "canonical": "Nagaland",
+      "kind": "state",
+      "names": {
+        "en": ["Nagaland", "NL"],
+        "Devanagari": ["नागालैंड", "नागालैण्ड"],
+        "Bengali": ["নাগাল্যান্ড"],
+        "Gurmukhi": ["ਨਾਗਾਲੈਂਡ"],
+        "Gujarati": ["નાગાલેન્ડ"],
+        "Oriya": ["ନାଗାଲୟ"],
+        "Tamil": ["நாகாலாந்து"],
+        "Telugu": ["నాగాలాండ్"],
+        "Kannada": ["ನಾಗಾಲ್ಯಾಂಡ್"],
+        "Malayalam": ["നാഗാലാന്ത്"]
+      }
+    },
+    {
+      "canonical": "Odisha",
+      "kind": "state",
+      "names": {
+        "en": ["Odisha", "OD", "Orissa", "Orissa State"],
+        "Devanagari": ["ओडिशा", "ओड़िशा", "ओरिसा"],
+        "Bengali": ["ওড়িশা", "ওডিশা", "ওড়িশ্য"],
+        "Gurmukhi": ["ਓਡ਼ਿਸ਼ਾ"],
+        "Gujarati": ["ઓડિશા"],
+        "Oriya": ["ଓଡ଼ିଶା", "ଓଡିଶା"],
+        "Tamil": ["ஒடிசா"],
+        "Telugu": ["ఒడిశా"],
+        "Kannada": ["ಒಡಿಶಾ"],
+        "Malayalam": ["ഒഡിശ"]
+      }
+    },
+    {
+      "canonical": "Punjab",
+      "kind": "state",
+      "names": {
+        "en": ["Punjab", "PB"],
+        "Devanagari": ["पंजाब", "ਪੰਜਾਬ"],
+        "Bengali": ["পাঞ্জাব"],
+        "Gurmukhi": ["ਪੰਜਾਬ"],
+        "Gujarati": ["પંજાબ"],
+        "Oriya": ["ପଞ୍ଜାବ"],
+        "Tamil": ["பஞ்சாப்"],
+        "Telugu": ["పంజాబ్"],
+        "Kannada": ["ಪಂಜಾಬ್"],
+        "Malayalam": ["പഞ്ചാബ്"]
+      }
+    },
+    {
+      "canonical": "Rajasthan",
+      "kind": "state",
+      "names": {
+        "en": ["Rajasthan", "RJ"],
+        "Devanagari": ["राजस्थान"],
+        "Bengali": ["রাজস্থান"],
+        "Gurmukhi": ["ਰਾਜਸਥਾਨ"],
+        "Gujarati": ["રાજસ્થાન"],
+        "Oriya": ["ରାଜସ୍ଥାନ"],
+        "Tamil": ["ராஜஸ்தான்"],
+        "Telugu": ["రాజస్థాన్"],
+        "Kannada": ["ರಾಜಸ್ಥಾನ್"],
+        "Malayalam": ["രാജസ്ഥാൻ"]
+      }
+    },
+    {
+      "canonical": "Sikkim",
+      "kind": "state",
+      "names": {
+        "en": ["Sikkim", "SK"],
+        "Devanagari": ["सिक्किम"],
+        "Bengali": ["সিক্কিম"],
+        "Gurmukhi": ["ਸਿੱਕਿੰਮ"],
+        "Gujarati": ["સિક્કિમ"],
+        "Oriya": ["ସିକିମ"],
+        "Tamil": ["சிக்கிம்"],
+        "Telugu": ["సిక్కిం"],
+        "Kannada": ["ಸಿಕ್ಕಿಂ"],
+        "Malayalam": ["സിക്കിം"]
+      }
+    },
+    {
+      "canonical": "Tamil Nadu",
+      "kind": "state",
+      "names": {
+        "en": ["Tamil Nadu", "TN", "Tamilnadu"],
+        "Devanagari": ["तमिलनाडु", "तमिलनाडू"],
+        "Bengali": ["তামিলনাডু"],
+        "Gurmukhi": ["ਤਮਿਲ ਨਾਡੂ"],
+        "Gujarati": ["તમિલનાડુ"],
+        "Oriya": ["ତମିଲନାଡୁ"],
+        "Tamil": ["தமிழ்நாடு", "தமிழ் நாடு"],
+        "Telugu": ["తమిలనాడు"],
+        "Kannada": ["ತಮಿಳನಾಡು"],
+        "Malayalam": ["തമിഴ്‌നാട്", "തമിഴ്നാട്"]
+      }
+    },
+    {
+      "canonical": "Telangana",
+      "kind": "state",
+      "names": {
+        "en": ["Telangana", "TS", "TG"],
+        "Devanagari": ["तेलंगाना", "तैलंगाना"],
+        "Bengali": ["তেলেঙ্গানা"],
+        "Gurmukhi": ["ਤੇਲੰਗਾਣਾ"],
+        "Gujarati": ["તેલંગાણા"],
+        "Oriya": ["ତେଲଙ୍ଗାଣ"],
+        "Tamil": ["தெலங்காணம்"],
+        "Telugu": ["తెలంగాణ"],
+        "Kannada": ["ತೆಲಂಗಾಣ"],
+        "Malayalam": ["തെലങ്ങാന"]
+      }
+    },
+    {
+      "canonical": "Tripura",
+      "kind": "state",
+      "names": {
+        "en": ["Tripura", "TR"],
+        "Devanagari": ["त्रिपुरा"],
+        "Bengali": ["ত্রিপুরা"],
+        "Gurmukhi": ["ਤ੍ਰਿਪੁਰਾ"],
+        "Gujarati": ["ત્રિપુરા"],
+        "Oriya": ["ତ୍ରିପୁରା"],
+        "Tamil": ["திரிபுரா"],
+        "Telugu": ["త్రిపుర"],
+        "Kannada": ["ತ್ರಿಪುರ"],
+        "Malayalam": ["ത്രിപ്പുര"]
+      }
+    },
+    {
+      "canonical": "Uttar Pradesh",
+      "kind": "state",
+      "names": {
+        "en": ["Uttar Pradesh", "UP"],
+        "Devanagari": ["उत्तर प्रदेश", "उत्तरप्रदेश"],
+        "Bengali": ["উত্তর প্রদেশ"],
+        "Gurmukhi": ["ਉੱਤਰ ਪ੍ਰਦੇਸ਼"],
+        "Gujarati": ["ઉત્તર પ્રદેશ"],
+        "Oriya": ["ଉତ୍ତର ପ୍ରଦେଶ"],
+        "Tamil": ["உத்தரப் பிரதேசம்"],
+        "Telugu": ["ఉత్తర ప్రదేశ్"],
+        "Kannada": ["ಉತ್ತರ ಪ್ರದೇಶ"],
+        "Malayalam": ["ഉത്തർ പ്രദേശം"]
+      }
+    },
+    {
+      "canonical": "Uttarakhand",
+      "kind": "state",
+      "names": {
+        "en": ["Uttarakhand", "UK", "Uttrakhand"],
+        "Devanagari": ["उत्तराखंड", "उत्तराखण्ड"],
+        "Bengali": ["উত্তরাখণ্ড"],
+        "Gurmukhi": ["ਉੱਤਰਾਖੰਡ"],
+        "Gujarati": ["ઉત્તરાખંડ"],
+        "Oriya": ["ଉତ୍ତରାଖଣ୍ଡ"],
+        "Tamil": ["உத்தராகண்ட்"],
+        "Telugu": ["ఉత్తరాఖండ్"],
+        "Kannada": ["ಉತ್ತರಾಖಂಡ"],
+        "Malayalam": ["ഉത്തരാഖണ്ഡ്"]
+      }
+    },
+    {
+      "canonical": "West Bengal",
+      "kind": "state",
+      "names": {
+        "en": ["West Bengal", "WB"],
+        "Devanagari": ["पश्चिम बंगाल", "पश्चिम बङ्गाल"],
+        "Bengali": ["পশ্চিমবঙ্গ", "পশ্চিম বাংলা"],
+        "Gurmukhi": ["ਪੱਛਮੀ ਬੰਗਾਲ"],
+        "Gujarati": ["પશ્ચિમ બંગાળ"],
+        "Oriya": ["ପଶ୍ଚିମବଙ୍ଗ"],
+        "Tamil": ["மேற்கு வங்காளம்"],
+        "Telugu": ["పశ్చిమ బెంగాల్"],
+        "Kannada": ["ಪಶ್ಚಿಮ ಬಂಗಾಳ"],
+        "Malayalam": ["പശ്ചിമബംഗാളം"]
+      }
+    },
+    {
+      "canonical": "Andaman and Nicobar Islands",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Andaman and Nicobar Islands", "Andaman & Nicobar Islands", "A & N Islands", "AN"],
+        "Devanagari": ["अंडमान और निकोबार द्वीपसमूह", "अंडमान एवं निकोबार द्वीपसमूह"],
+        "Bengali": ["আন্দামান ও নিকোবার দ্বীপপুঞ্জ"],
+        "Gurmukhi": ["ਅੰਡਮੈਨ ਅਤੇ ਨਿਕੋਬਾਰ ਟਾਪੂਆਂ"],
+        "Gujarati": ["અંદમાન અને નિકોબાર ટાપુઓ"],
+        "Oriya": ["ଆନ୍ଦମାନ ଓ ନିକୋବାର ଦ୍ୱୀପ"],
+        "Tamil": ["அந்தமான் நிக்கோபார் தீவுகள்"],
+        "Telugu": ["అండమాన్ నికోబార్ ద్రీపాలు"],
+        "Kannada": ["ಅಂಡಮಾನ್ ನಿಕೋಬಾರ್ ದ್ವೀಪಗಳು"],
+        "Malayalam": ["ആൻഡമാൻ നിക്കോബാർ ദ്വീപങ്ങൾ"]
+      }
+    },
+    {
+      "canonical": "Chandigarh",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Chandigarh", "CH"],
+        "Devanagari": ["चंडीगढ़", "चण्डीगढ़"],
+        "Bengali": ["চণ্ডীগড়"],
+        "Gurmukhi": ["ਚੰਡੀਗੜ", "ਚੰਡੀਗੜ੍ਹ"],
+        "Gujarati": ["ચંડીગઢ़"],
+        "Oriya": ["ଚଣ୍ଡୀଗଢ଼"],
+        "Tamil": ["சண்டிகர்"],
+        "Telugu": ["చండీగఢ్"],
+        "Kannada": ["ಚಂಡೀಗಢ್"],
+        "Malayalam": ["ചണ്ഡീഗഢ്"]
+      }
+    },
+    {
+      "canonical": "Dadra and Nagar Haveli and Daman and Diu",
+      "kind": "union_territory",
+      "names": {
+        "en": [
+          "Dadra and Nagar Haveli and Daman and Diu",
+          "Dadra & Nagar Haveli & Daman & Diu",
+          "Dadra and Nagar Haveli",
+          "Daman and Diu",
+          "DH",
+          "DD"
+        ],
+        "Devanagari": [
+          "दादरा और नगर हवेली और दमन और दीव",
+          "दादरा एवं नगर हवेली एवं दमन एवं दीव",
+          "दादरा और नगर हवेली",
+          "दमन और दीव"
+        ],
+        "Bengali": ["দাদরা ও নগর হাওলি ও দমন ও দিউ", "দাদরা ও নগর হাওলি", "দমন ও দিউ"],
+        "Gurmukhi": ["ਦਾਦਰਾ ਅਤੇ ਨਗਰ ਹਵੇਲੀ ਅਤੇ ਦਮਨ ਅਤੇ ਦੀਵ", "ਦਾਦਰਾ ਅਤੇ ਨਗਰ ਹਵੇਲੀ", "ਦਮਨ ਅਤੇ ਦੀਵ"],
+        "Gujarati": ["દાદરા અને નગર હવેલી અને દમન અને દીવ", "દાદરા અને નગર હવેલી", "દમન અને દીવ"],
+        "Oriya": ["ଦାଦ୍ରା ଓ ନଗର ହାୱେଲୀ ଓ ଦମନ ଓ ଦିୟୁ", "ଦାଦ୍ରା ଓ ନଗର ହାୱେଲୀ", "ଦମନ ଓ ଦିୟୁ"],
+        "Tamil": ["தாத்ரா நகர் ஹவேலி தாமன் தியு", "தாத்ரா நகர் ஹவேலி", "தாமன் தியு"],
+        "Telugu": ["దాద్రా నగర్ హవేలీ దమన్ దియు", "దాద్రా నగర్ హవేలీ", "దమన్ దియు"],
+        "Kannada": ["ದಾದ್ರಾ ನಗರ್ ಹವೇಲಿ ದಮನ್ ದಿಯು", "ದಾದ್ರಾ ನಗರ್ ಹವೇಲಿ", "ದಮನ್ ದಿಯು"],
+        "Malayalam": ["ദാദ്ര നഗര് ഹവേലി ദമൻ ദിയു", "ദാദ്ര നഗര് ഹവേലി", "ദമൻ ദിയു"]
+      }
+    },
+    {
+      "canonical": "Delhi",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Delhi", "NCT", "National Capital Territory of Delhi", "DL", "New Delhi"],
+        "Devanagari": ["दिल्ली", "नई दिल्ली"],
+        "Bengali": ["দিল্লি"],
+        "Gurmukhi": ["ਦਿੱਲੀ"],
+        "Gujarati": ["દિલ્હી"],
+        "Oriya": ["ଦିଲ୍ହୀ"],
+        "Tamil": ["டெல்லி"],
+        "Telugu": ["ఢిల్లీ"],
+        "Kannada": ["ದೆಹ್ಲಿ"],
+        "Malayalam": ["ഡൽഹി"]
+      }
+    },
+    {
+      "canonical": "Jammu and Kashmir",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Jammu and Kashmir", "Jammu & Kashmir", "J&K", "JK"],
+        "Devanagari": ["जम्मू और कश्मीर", "जम्मू एवं कश्मीर"],
+        "Bengali": ["জম্মু ও কাশ্মীর"],
+        "Gurmukhi": ["ਜੰਮੂ ਅਤੇ ਕਸ਼ਮੀਰ"],
+        "Gujarati": ["જમ્મુ અને કાશ્મીર"],
+        "Oriya": ["ଜମ୍ମୁ ଓ କାଶ୍ମୀର"],
+        "Tamil": ["ஜம்மூ காஷ்மீர்"],
+        "Telugu": ["జమ్ము కాశ్మీర్"],
+        "Kannada": ["ಜಮ್ಮೂ ಕಾಶ್ಮೀರ್"],
+        "Malayalam": ["ജമ്മൂ കാശ്മീർ"]
+      }
+    },
+    {
+      "canonical": "Ladakh",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Ladakh", "LA"],
+        "Devanagari": ["लद्दाख", "लदाख"],
+        "Bengali": ["লাদাখ"],
+        "Gurmukhi": ["ਲਡ਼ਾਕ", "ਲਦਾਖ"],
+        "Gujarati": ["લદાખ"],
+        "Oriya": ["ଲଦାଖ"],
+        "Tamil": ["லடாக்"],
+        "Telugu": ["లడాక్"],
+        "Kannada": ["ಲಡಾಕ್"],
+        "Malayalam": ["ലഡാക്ക്"]
+      }
+    },
+    {
+      "canonical": "Lakshadweep",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Lakshadweep", "LD"],
+        "Devanagari": ["लक्षद्वीप"],
+        "Bengali": ["লাক্ষদ্বীপ"],
+        "Gurmukhi": ["ਲਕਸ਼ਦੀਪ"],
+        "Gujarati": ["લક્ષદ્વીપ"],
+        "Oriya": ["ଲକ୍ଷଦ୍ୱୀପ"],
+        "Tamil": ["லட்சத்தீவு"],
+        "Telugu": ["లక్షద్వీప్"],
+        "Kannada": ["ಲಕ್ಷದ್ವೀಪ"],
+        "Malayalam": ["ലക്ഷദ്വീപ്"]
+      }
+    },
+    {
+      "canonical": "Puducherry",
+      "kind": "union_territory",
+      "names": {
+        "en": ["Puducherry", "Pondicherry", "PY", "PN"],
+        "Devanagari": ["पुदुच्चेरी", "पुडुचेरी"],
+        "Bengali": ["পুদুচেরি"],
+        "Gurmukhi": ["ਪੁਦੁਚੇਰੀ"],
+        "Gujarati": ["પુદુચ્ચેરી"],
+        "Oriya": ["ପୁଦୁଚ୍ଚେରୀ"],
+        "Tamil": ["புதுச்சேரி"],
+        "Telugu": ["పుదుచ్చేరి"],
+        "Kannada": ["ಪುದುಚ್ಚೇರಿ"],
+        "Malayalam": ["പുദുച്ചേരി"]
+      }
+    }
+  ]
+}
